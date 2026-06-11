@@ -894,7 +894,7 @@ function onGpsUpdate(){
 /* ============================ DOM helpers ============================ */
 const $ = s=>document.querySelector(s);
 const $$ = s=>Array.from(document.querySelectorAll(s));
-function el(tag,attrs={},...kids){ const e=document.createElement(tag); for(const k in attrs){ if(k==='class')e.className=attrs[k]; else if(k==='html')e.innerHTML=attrs[k]; else if(k.startsWith('on'))e.addEventListener(k.slice(2),attrs[k]); else e.setAttribute(k,attrs[k]); } kids.flat().forEach(c=>e.append(c?.nodeType?c:document.createTextNode(c??''))); return e; }
+function el(tag,attrs={},...kids){ const e=document.createElement(tag); for(const k in attrs){ const v=attrs[k]; if(k==='class')e.className=v; else if(k==='html')e.innerHTML=v; else if(k.startsWith('on'))e.addEventListener(k.slice(2),v); else if(k==='checked'||k==='disabled'||k==='selected'||k==='multiple'||k==='readOnly')e[k]=!!v; else if(v===false||v==null){} else e.setAttribute(k,v); } kids.flat().forEach(c=>e.append(c?.nodeType?c:document.createTextNode(c??''))); return e; }
 function toast(msg){ const tt=$('#toast'); tt.textContent=msg; tt.classList.add('show'); clearTimeout(tt._t); tt._t=setTimeout(()=>tt.classList.remove('show'),2200); }
 function modal(open){ $('#modalBg').classList.toggle('open',open); if(!open) $('#modal').innerHTML=''; }
 
@@ -1008,6 +1008,7 @@ function navBlock(lat,lon,label){
     el('span',{html:`<i style="background:var(--yellow)"></i>${t('toTarget')}`}),
     el('span',{html:`<i style="background:#fff"></i>${t('yourDir')}`})));
   wrap.append(el('div',{class:'kv',id:'cmpDist'}));
+  wrap.append(el('div',{class:'hint',id:'cmpHint'}));
   wrap.append(el('button',{class:'btn',style:'margin-top:6px',onclick:()=>openMaps(lat,lon)},'⚲ '+t('openMaps')));
   return wrap;
 }
@@ -1032,7 +1033,7 @@ function updateCompass(){
     + `<g transform="rotate(${viewRot.toFixed(1)} 100 100)">${inner}</g>`
     + `<circle cx="100" cy="100" r="6" fill="var(--bg)" stroke="#666"/>`;
   const dd=$('#cmpDist'); if(dd){ if(haveGps){ const d=haversine(state.gps.lat,state.gps.lon,tgt.lat,tgt.lon); dd.innerHTML=`<span class="k">${t('dist')}</span><span class="v">${d<1000?d.toFixed(0)+' m':(d/1000).toFixed(2)+' km'} · ${T.toFixed(0)}°</span>`; } else dd.innerHTML=`<span class="k">${t('dist')}</span><span class="v">${t('gpsWait')}</span>`; }
-  if(H==null){ const dd2=$('#cmpDist'); if(dd2 && haveGps) dd2.insertAdjacentHTML('afterend',`<div class="hint" id="moveHint">${t('move')}</div>`); }
+  const hint=$('#cmpHint'); if(hint) hint.textContent = (haveGps && H==null) ? t('move') : '';
 }
 function openMaps(lat,lon){ const url=`https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}&travelmode=driving`; window.open(url,'_blank'); toast(t('mapsCoord')); }
 
